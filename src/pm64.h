@@ -996,6 +996,90 @@ typedef struct Area {
     /* 0x0C */ char *name; ///< JP debug name.
 } pm_Area;                 // size = 0x10
 
+typedef u16 Palette16[16]; // size = 0x20
+
+typedef struct Npc {
+    /* 0x000 */ s32 flags;
+    /* 0x004 */ void (*onUpdate)(struct Npc*); ///< Run before anything else for this NPC in update_npcs()
+    /* 0x008 */ void (*onRender)(struct Npc*); ///< Run after the display list for this NPC is built
+    /* 0x00C */ f32 yaw;
+    /* 0x010 */ f32 planarFlyDist; /* also used for speech, temp0? */
+    /* 0x014 */ f32 jumpScale; /* also used for speech, temp1? */
+    /* 0x018 */ f32 moveSpeed;
+    /* 0x01C */ f32 jumpVelocity;
+    /* 0x020 */ struct BlurBuffer* blurBuf; ///< Null unless flag 0x100000 is set.
+    /* 0x024 */ s32 spriteInstanceID;
+    /* 0x028 */ union {
+    /*       */     u16 h;
+    /*       */     u32 w;
+    /*       */ } currentAnim;
+    /* 0x02C */ s32 unk_2C;
+    /* 0x030 */ f32 animationSpeed;
+    /* 0x034 */ f32 renderYaw;
+    /* 0x038 */ Vec3f pos;
+    /* 0x044 */ Vec3f rotation;
+    /* 0x050 */ f32 rotationVerticalPivotOffset;
+    /* 0x054 */ Vec3f scale;
+    /* 0x060 */ Vec3f moveToPos;
+    /* 0x06C */ Vec3f colliderPos; /* used during collision with player */
+    /* 0x078 */ s32 shadowIndex;
+    /* 0x07C */ f32 shadowScale;
+    /* 0x080 */ s32 collisionChannel; /* flags used with collision tracing */
+    /* 0x084 */ s16 currentFloor; /* colliderID */
+    /* 0x086 */ s16 currentWall; /* colliderID */
+    /* 0x088 */ s16 isFacingAway;
+    /* 0x08A */ s16 yawCamOffset;
+    /* 0x08C */ s16 turnAroundYawAdjustment;
+    /* 0x08E */ s16 duration; // TODO: name less vaguely
+    /* 0x090 */ Vec3s homePos;
+    /* 0x096 */ s16 unk_96;
+    /* 0x098 */ s16 unk_98;
+    /* 0x09A */ s16 unk_9A;
+    /* 0x09C */ s16 unk_9C;
+    /* 0x09E */ s16 unk_9E;
+    /* 0x0A0 */ s16 unk_A0;
+    /* 0x0A2 */ u16 unk_A2;
+    /* 0x0A4 */ s8 npcID;
+    /* 0x0A5 */ char unk_A5;
+    /* 0x0A6 */ s16 collisionRadius;
+    /* 0x0A8 */ s16 collisionHeight;
+    /* 0x0AA */ s8 renderMode;
+    /* 0x0AB */ s8 verticalRenderOffset;
+    /* 0x0AC */ u8 alpha;
+    /* 0x0AD */ u8 alpha2; ///< Multiplied with Npc::alpha
+    /* 0x0AE */ char unk_AE[2];
+    /* 0x0B0 */ s32** extraAnimList;
+    /* 0x0B4 */ s8 palSwapType; // 0..4 inclusive
+    /* 0x0B5 */ s8 palSwapPrevType;
+    /* 0x0B6 */ s8 dirtyPalettes;
+    /* 0x0B7 */ s8 palSwapState;
+    /* 0x0B8 */ char unk_B8[4];
+    /* 0x0BC */ s16 palSwapTimer;
+    /* 0x0BE */ s16 palSwapLerpAlpha;
+    /* 0x0C0 */ s8 unk_C0;
+    /* 0x0C1 */ s8 paletteCount;
+    /* 0x0C2 */ char unk_C2[2];
+    /* 0x0C4 */ s32* spritePaletteList;
+    /* 0x0C8 */ Palette16 localPaletteData[16];
+    /* 0x2C8 */ Palette16* localPalettes[16];
+    /* 0x308 */ s16 unk_308;
+    /* 0x30A */ s16 unk_30A;
+    /* 0x30C */ s16 unk_30C;
+    /* 0x30E */ s16 unk_30E;
+    /* 0x310 */ s16 unk_310;
+    /* 0x312 */ s16 unk_312;
+    /* 0x314 */ s16 unk_314;
+    /* 0x316 */ s16 unk_316;
+    /* 0x318 */ f32 screenSpaceOffset2D[2];
+    /* 0x320 */ f32 verticalStretch;
+    /* 0x324 */ struct EffectInstance* decorations[2];
+    /* 0x32C */ s8 decorationType[2];
+    /* 0x32E */ s8 changedDecoration[2];
+    /* 0x330 */ s8 decorationInitialised[2];
+    /* 0x332 */ s16 decorationUnk[2];
+    /* 0x336 */ char unk_336[10];
+} Npc; // size = 0x340
+
 typedef void *(*PrintCallback)(void *, const char *, u32);
 typedef pm_Evt *pm_ScriptList[128];
 
@@ -1069,6 +1153,8 @@ void pm_bgmSetSong(s32 player_index, s32 song_id, s32 variation, s32 fade_out_ti
 pm_ApiStatus pm_useIdleAnimation(pm_Evt *script, s32 isInitialCall);
 pm_ApiStatus pm_gotoMap(pm_Evt *script, s32 isInitialCall);
 void pm_saveGame(void);
+void pm_npc_test_move_simple_with_slipping(s32, f32*, f32*, f32*, f32, f32, f32, f32);
+void pm_fx_big_smoke_puff(f32, f32, f32);
 
 void pm_state_render_frontUI(void);
 void pm_step_game_loop(void);

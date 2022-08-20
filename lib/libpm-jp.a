@@ -89,3 +89,5 @@ pm_update_camera_mode_6 = 0x8002F620;
 
 update_player_input_rom_hook = 0x8009D914;
 pm_update_player_input = 0x800E1F70;
+pm_npc_test_move_simple_with_slipping = 0x800DD5F8;
+pm_fx_big_smoke_puff = 0x8006F8D0;

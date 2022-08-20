@@ -75,6 +75,8 @@ static u16 acLastValidFrame = 0;
 static u16 clippyFramesSinceBattle = 0;
 static u8 clippyStatus = 0;
 
+static s8 teleportEffect = 0;
+
 extern void setACEHook(void);
 
 s32 getMatrixTotal(void) {
@@ -164,6 +166,17 @@ static s32 enableAcTrainerProc(struct MenuItem *item, enum MenuCallbackReason re
         settings->trainerBits.acEnabled = 0;
     } else if (reason == MENU_CALLBACK_THINK) {
         menuCheckboxSet(item, settings->trainerBits.acEnabled);
+    }
+    return 0;
+}
+
+static s32 enableLakiTeleportProc(struct MenuItem *item, enum MenuCallbackReason reason, void *data) {
+    if (reason == MENU_CALLBACK_SWITCH_ON) {
+        settings->trainerBits.teleportBool = 1;
+    } else if (reason == MENU_CALLBACK_SWITCH_OFF) {
+        settings->trainerBits.teleportBool = 0;
+    } else if (reason == MENU_CALLBACK_THINK) {
+        menuCheckboxSet(item, settings->trainerBits.teleportBool);
     }
     return 0;
 }
@@ -474,6 +487,41 @@ static void updateLzsTrainer(void) {
     }
 }
 
+static s32 updateLakiTeleportTrainer(void) {
+    Npc* partner = *(Npc**)0x8009E7A0;
+    static f32 xPos, yPos, zPos, yaw;
+    s32 i;
+    f32 speed;
+
+    if (settings->trainerBits.teleportBool) {
+        if (partner != NULL) {
+            if (partner->currentAnim.w & 0x00080000) { //if npc is lakilester
+                yaw = 0.0f;
+                xPos = pm_gPlayerStatus.position.x;
+                yPos = pm_gPlayerStatus.position.y;
+                zPos = pm_gPlayerStatus.position.z;
+
+                for (i = 0; i < 4; i++) {
+                    if (pm_gGameStatus.currentButtons[0].buttons & 0x0010) { //R
+                        speed = 25.0f;
+                    } else if (pm_gGameStatus.currentButtons[0].buttons & 0x0020) { //L
+                        speed = 37.0f;
+                    } else {
+                        speed = 4.0f;
+                    }
+
+
+                    pm_npc_test_move_simple_with_slipping(0x10000, &xPos, &yPos, &zPos, speed,
+                                                        yaw, partner->collisionHeight, partner->collisionRadius);
+                    yaw += 90.0f;
+                }
+                pm_fx_big_smoke_puff(xPos, yPos, zPos);
+            }
+        }
+    }
+    return 1;
+}
+
 static void blockCheckSuccessOrEarly(void) {
     const u32 mashWindow = 10;
     u32 blockWindow = 3;
@@ -599,18 +647,21 @@ void trainerUpdate(void) {
     updateLzsTrainer();
     updateBlockTrainer();
     updateClippyTrainer();
+    updateLakiTeleportTrainer();
 }
 
 void createTrainerMenu(struct Menu *menu) {
     static struct Menu lzsMenu;
     static struct Menu issMenu;
     static struct Menu aceMenu;
+    static struct Menu teleportMenu;
 
     /* initialize menu */
     menuInit(menu, MENU_NOVALUE, MENU_NOVALUE, MENU_NOVALUE);
     menuInit(&lzsMenu, MENU_NOVALUE, MENU_NOVALUE, MENU_NOVALUE);
     menuInit(&issMenu, MENU_NOVALUE, MENU_NOVALUE, MENU_NOVALUE);
     menuInit(&aceMenu, MENU_NOVALUE, MENU_NOVALUE, MENU_NOVALUE);
+    menuInit(&teleportMenu, MENU_NOVALUE, MENU_NOVALUE, MENU_NOVALUE);
 
     /*build menu*/
     struct GfxTexture *wrench = resourceLoadGrcTexture("wrench");
@@ -665,4 +716,8 @@ void createTrainerMenu(struct Menu *menu) {
     menuAddStaticCustom(&aceMenu, 0, 1, aceDrawProc, NULL, 0xC0C0C0);
     menuAddButton(&aceMenu, 0, 5, "practice payload", acePracticePayloadProc, NULL);
     menuAddButton(&aceMenu, 0, 6, "oot instruction", aceOotInstrProc, NULL);
+
+    /*build lakiteleport menu*/
+    menuAddStatic(menu, 0, y, "laki teleport", 0xC0C0C0);
+    menuAddCheckbox(menu, xOffset, y++, enableLakiTeleportProc, NULL);
 }
